@@ -20,6 +20,7 @@ const core = __nccwpck_require__(7484);
 const tc = __nccwpck_require__(3472);
 const io = __nccwpck_require__(4994);
 const releases = __nccwpck_require__(5819);
+const exec = require('@actions/exec');
 
 // arch in [arm, x32, x64...] (https://nodejs.org/api/os.html#os_os_arch)
 // return value in [amd64, 386, arm]
