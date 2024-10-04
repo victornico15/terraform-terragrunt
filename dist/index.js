@@ -105,24 +105,35 @@ async function installTerragrunt(version) {
   const platform = os.platform();
   const architecture = os.arch();
 
+  // Mapear platform e architecture corretamente para corresponder à URL do Terragrunt
+  const terragruntPlatform = platform === 'win32' ? 'windows' : platform;  // Terragrunt usa 'windows' para sistemas Windows
+  const terragruntArch = architecture === 'x64' ? 'amd64' : architecture;  // Terragrunt usa 'amd64' para x64
+
   // Montar a URL para baixar o Terragrunt
-  const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${platform}_${architecture}`;
+  const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${terragruntPlatform}_${terragruntArch}`;
+
+  core.info(`Baixando Terragrunt de: ${terragruntURL}`);
   
   // Baixar o binário
-  const downloadPath = await tc.downloadTool(terragruntURL);
+  try {
+    const downloadPath = await tc.downloadTool(terragruntURL);
   
-  // Definir o caminho para a instalação
-  const installPath = path.join(os.homedir(), 'terragrunt');
-  
-  // Mover o binário para o caminho de instalação
-  await io.mv(downloadPath, installPath);
-  
-  // Tornar o binário executável
-  await exec.exec(`chmod +x ${installPath}`);
-  
-  // Adicionar ao PATH
-  core.addPath(installPath);
-  core.info('Terragrunt instalado com sucesso.');
+    // Definir o caminho para a instalação
+    const installPath = path.join(os.homedir(), 'terragrunt');
+    
+    // Mover o binário para o caminho de instalação
+    await io.mv(downloadPath, installPath);
+    
+    // Tornar o binário executável
+    await exec.exec(`chmod +x ${installPath}`);
+    
+    // Adicionar ao PATH
+    core.addPath(installPath);
+    core.info('Terragrunt instalado com sucesso.');
+  } catch (error) {
+    core.error(`Erro ao baixar o Terragrunt: ${error.message}`);
+    throw error;
+  }
 }
 
 
