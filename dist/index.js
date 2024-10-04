@@ -14,13 +14,13 @@ const fs = (__nccwpck_require__(9896).promises);
 const os = __nccwpck_require__(857);
 const path = __nccwpck_require__(6928);
 const semver = __nccwpck_require__(2088);
+const exec = __nccwpck_require__(5236);
 
 // External
 const core = __nccwpck_require__(7484);
 const tc = __nccwpck_require__(3472);
 const io = __nccwpck_require__(4994);
 const releases = __nccwpck_require__(5819);
-const exec = require('@actions/exec');
 
 // arch in [arm, x32, x64...] (https://nodejs.org/api/os.html#os_os_arch)
 // return value in [amd64, 386, arm]
@@ -86,10 +86,10 @@ async function installWrapper (pathToCLI) {
 
   // Install our wrapper as terraform
   try {
-    source = __nccwpck_require__.ab + "index1.js";
+    source = path.resolve([__dirname, '..', 'wrapper', 'dist', 'index.js'].join(path.sep));
     target = [pathToCLI, 'terraform'].join(path.sep);
     core.debug(`Copying ${source} to ${target}.`);
-    await io.cp(__nccwpck_require__.ab + "index1.js", target);
+    await io.cp(source, target);
   } catch (e) {
     core.error(`Unable to copy ${source} to ${target}.`);
     throw e;
@@ -98,45 +98,6 @@ async function installWrapper (pathToCLI) {
   // Export a new environment variable, so our wrapper can locate the binary
   core.exportVariable('TERRAFORM_CLI_PATH', pathToCLI);
 }
-
-
-async function installTerragrunt(version) {
-  core.info(`Instalando Terragrunt versão ${version}`);
-  
-  const platform = os.platform();
-  const architecture = os.arch();
-
-  // Mapear platform e architecture corretamente para corresponder à URL do Terragrunt
-  const terragruntPlatform = platform === 'win32' ? 'windows' : platform;  // Terragrunt usa 'windows' para sistemas Windows
-  const terragruntArch = architecture === 'x64' ? 'amd64' : architecture;  // Terragrunt usa 'amd64' para x64
-
-  // Montar a URL para baixar o Terragrunt
-  const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${terragruntPlatform}_${terragruntArch}`;
-
-  core.info(`Baixando Terragrunt de: ${terragruntURL}`);
-  
-  // Baixar o binário
-  try {
-    const downloadPath = await tc.downloadTool(terragruntURL);
-  
-    // Definir o caminho para a instalação
-    const installPath = path.join(os.homedir(), 'terragrunt');
-    
-    // Mover o binário para o caminho de instalação
-    await io.mv(downloadPath, installPath);
-    
-    // Tornar o binário executável
-    await exec.exec(`chmod +x ${installPath}`);
-    
-    // Adicionar ao PATH
-    core.addPath(installPath);
-    core.info('Terragrunt instalado com sucesso.');
-  } catch (error) {
-    core.error(`Erro ao baixar o Terragrunt: ${error.message}`);
-    throw error;
-  }
-}
-
 
 // Add credentials to CLI Configuration File
 // https://www.terraform.io/docs/commands/cli-config.html
@@ -167,14 +128,14 @@ credentials "${credentialsHostname}" {
   await fs.writeFile(credsFile, creds);
 }
 
-async function run () {
+async function run() {
   try {
     // Gather GitHub Actions inputs
     const version = core.getInput('terraform_version');
     const credentialsHostname = core.getInput('cli_config_credentials_hostname');
     const credentialsToken = core.getInput('cli_config_credentials_token');
     const wrapper = core.getInput('terraform_wrapper') === 'true';
-    const terragruntVersion = core.getInput('terragrunt_version') || '';
+    const terragruntVersion = core.getInput('terragrunt_version') || '';  // Input para o Terragrunt
 
     // Gather OS details
     const osPlatform = os.platform();
@@ -208,10 +169,11 @@ async function run () {
 
     // Add to path
     core.addPath(pathToCLI);
-    
+
+    // Instalar o Terragrunt se a versão for fornecida
     if (terragruntVersion) {
       await installTerragrunt(terragruntVersion);
-    }    
+    }
 
     // Add credentials to file if they are provided
     if (credentialsHostname && credentialsToken) {
@@ -220,6 +182,33 @@ async function run () {
     return release;
   } catch (error) {
     core.error(error);
+    throw error;
+  }
+}
+
+async function installTerragrunt(version) {
+  core.info(`Instalando Terragrunt versão ${version}`);
+  
+  const platform = os.platform();
+  const architecture = os.arch();
+
+  // Mapear platform e architecture corretamente
+  const terragruntPlatform = platform === 'win32' ? 'windows' : platform;
+  const terragruntArch = architecture === 'x64' ? 'amd64' : architecture;
+
+  const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${terragruntPlatform}_${terragruntArch}`;
+
+  core.info(`Baixando Terragrunt de: ${terragruntURL}`);
+  
+  try {
+    const downloadPath = await tc.downloadTool(terragruntURL);
+    const installPath = path.join(os.homedir(), 'terragrunt');
+    await io.mv(downloadPath, installPath);
+    await exec.exec(`chmod +x ${installPath}`);
+    core.addPath(installPath);
+    core.info('Terragrunt instalado com sucesso.');
+  } catch (error) {
+    core.error(`Erro ao baixar o Terragrunt: ${error.message}`);
     throw error;
   }
 }
