@@ -98,6 +98,34 @@ async function installWrapper (pathToCLI) {
   core.exportVariable('TERRAFORM_CLI_PATH', pathToCLI);
 }
 
+
+async function installTerragrunt(version) {
+  core.info(`Instalando Terragrunt versão ${version}`);
+  
+  const platform = os.platform();
+  const architecture = os.arch();
+
+  // Montar a URL para baixar o Terragrunt
+  const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${platform}_${architecture}`;
+  
+  // Baixar o binário
+  const downloadPath = await tc.downloadTool(terragruntURL);
+  
+  // Definir o caminho para a instalação
+  const installPath = path.join(os.homedir(), 'terragrunt');
+  
+  // Mover o binário para o caminho de instalação
+  await io.mv(downloadPath, installPath);
+  
+  // Tornar o binário executável
+  await exec.exec(`chmod +x ${installPath}`);
+  
+  // Adicionar ao PATH
+  core.addPath(installPath);
+  core.info('Terragrunt instalado com sucesso.');
+}
+
+
 // Add credentials to CLI Configuration File
 // https://www.terraform.io/docs/commands/cli-config.html
 async function addCredentials (credentialsHostname, credentialsToken, osPlat) {
@@ -134,6 +162,7 @@ async function run () {
     const credentialsHostname = core.getInput('cli_config_credentials_hostname');
     const credentialsToken = core.getInput('cli_config_credentials_token');
     const wrapper = core.getInput('terraform_wrapper') === 'true';
+    const terragruntVersion = core.getInput('terragrunt_version') || '';
 
     // Gather OS details
     const osPlatform = os.platform();
@@ -167,6 +196,10 @@ async function run () {
 
     // Add to path
     core.addPath(pathToCLI);
+    
+    if (terragruntVersion) {
+      await installTerragrunt(terragruntVersion);
+    }    
 
     // Add credentials to file if they are provided
     if (credentialsHostname && credentialsToken) {

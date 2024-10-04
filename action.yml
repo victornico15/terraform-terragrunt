@@ -1,25 +1,32 @@
-name: 'HashiCorp - Setup Terraform'
-description: 'Sets up Terraform CLI in your GitHub Actions workflow.'
-author: 'HashiCorp, Inc.'
+name: 'Setup Terraform e Terragrunt'
+description: 'Configura o Terraform e, opcionalmente, o Terragrunt CLI no fluxo de trabalho do GitHub Actions.'
+author: 'VNicoE'
+
 inputs:
   cli_config_credentials_hostname:
-    description: 'The hostname of a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file. Defaults to `app.terraform.io`.'
+    description: 'O hostname de uma instância HCP Terraform/Terraform Enterprise para colocar dentro do bloco de credenciais do arquivo de configuração do Terraform CLI. O padrão é `app.terraform.io`.'
     default: 'app.terraform.io'
     required: false
   cli_config_credentials_token:
-    description: 'The API token for a HCP Terraform/Terraform Enterprise instance to place within the credentials block of the Terraform CLI configuration file.'
+    description: 'O token da API para uma instância HCP Terraform/Terraform Enterprise para colocar dentro do bloco de credenciais do arquivo de configuração do Terraform CLI.'
     required: false
   terraform_version:
-    description: 'The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.'
+    description: 'A versão do Terraform CLI a ser instalada. Pode ser uma versão específica ou uma string de restrição como `<1.13.0` para instalar a última versão que satisfaça a condição. O valor `latest` instala a versão mais recente. Padrão: `latest`.'
+    default: 'latest'
+    required: false
+  terragrunt_version:
+    description: 'A versão do Terragrunt CLI a ser instalada. Padrão: `latest`. Se não quiser instalar o Terragrunt, deixe em branco.'
     default: 'latest'
     required: false
   terraform_wrapper:
-    description: 'Whether or not to install a wrapper to wrap subsequent calls of the `terraform` binary and expose its STDOUT, STDERR, and exit code as outputs named `stdout`, `stderr`, and `exitcode` respectively. Defaults to `true`.'
+    description: 'Se deve ou não instalar um wrapper que exponha o STDOUT, STDERR, e o código de saída da execução do Terraform como outputs. Padrão: `true`.'
     default: 'true'
     required: false
+
 runs:
   using: 'node20'
   main: 'dist/index.js'
+
 branding:
   icon: 'terminal'
   color: 'purple'
