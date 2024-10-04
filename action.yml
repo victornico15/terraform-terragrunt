@@ -15,8 +15,8 @@ inputs:
     default: 'latest'
     required: false
   terragrunt_version:
-    description: 'A versão do Terragrunt CLI a ser instalada. Padrão: `latest`. Se não quiser instalar o Terragrunt, deixe em branco.'
-    default: 'latest'
+    description: 'A versão do Terragrunt CLI a ser instalada. Padrão: `v0.67.16`. Se não quiser instalar o Terragrunt, deixe em branco.'
+    default: '0.67.16'
     required: false
   terraform_wrapper:
     description: 'Se deve ou não instalar um wrapper que exponha o STDOUT, STDERR, e o código de saída da execução do Terraform como outputs. Padrão: `true`.'

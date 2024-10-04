@@ -99,31 +99,17 @@ async function installWrapper (pathToCLI) {
 }
 
 
-const fetch = require('node-fetch');  // Adicione este pacote se ainda não estiver usando
-
-async function getLatestTerragruntVersion() {
-  const response = await fetch('https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest');
-  const data = await response.json();
-  return data.tag_name.replace('v', '');  // Remover o 'v' da versão, se necessário
-}
-
 async function installTerragrunt(version) {
-  if (version === 'latest') {
-    version = await getLatestTerragruntVersion();  // Busca a última versão
-  }
-
   core.info(`Instalando Terragrunt versão ${version}`);
+  
   const platform = os.platform();
   const architecture = os.arch();
 
-  const terragruntPlatform = platform === 'win32' ? 'windows' : platform;
-  const terragruntArch = architecture === 'x64' ? 'amd64' : architecture;
   // Montar a URL para baixar o Terragrunt
   const terragruntURL = `https://github.com/gruntwork-io/terragrunt/releases/download/v${version}/terragrunt_${platform}_${architecture}`;
   
   // Baixar o binário
   const downloadPath = await tc.downloadTool(terragruntURL);
-  core.info(`Baixando Terragrunt de: ${terragruntURL}`);
   
   // Definir o caminho para a instalação
   const installPath = path.join(os.homedir(), 'terragrunt');
@@ -210,7 +196,7 @@ async function run () {
 
     // Add to path
     core.addPath(pathToCLI);
-
+    
     if (terragruntVersion) {
       await installTerragrunt(terragruntVersion);
     }    
